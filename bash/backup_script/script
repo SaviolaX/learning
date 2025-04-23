@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+# check for input argument
+if [ -z "$1" ]; then
+    echo "Usage: $0 <file_or_directory_to_backup>"
+    exit 1
+fi
+
+input_obj_path=$(realpath "$1")
+input_obj=$(basename "$input_obj_path")
+
+# check whether backup folder exists or create one.
+backup_folder="./backup_folder"
+mkdir -p "$backup_folder"
+backup_folder_path=$(realpath "$backup_folder")
+
+# get current data + time
+date_now=$(date -d today +"%m%d%Y%H%M%S")
+
+# colors
+GRN='\033[1;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
+# check input_obj type and coping data
+# depends on obj type.
+if [ -f "$input_obj" ]; then
+    echo -e "${YELLOW}Backing up file: ${NC}$input_obj"
+    cp "$input_obj_path" "$backup_folder_path/${input_obj}_$date_now"
+    echo -e "${GRN}Backup complete.👌"
+elif [ -d "$input_obj" ]; then
+    echo -e "${YELLOW}Backing up directory: ${NC}$input_obj"
+    cp -r "$input_obj_path" "$backup_folder_path/${input_obj}_$date_now"
+    echo -e "${GRN}Backup complete.👌"
+else
+    echo "Error: $input_obj does not exist or is not a regular file/directory"
+    exit 2
+fi
