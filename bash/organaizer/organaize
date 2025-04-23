@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+if [ ! -d "$1" ]; then # check whether input target_dir is actually DIR
+    echo "Usage: $0 <path_to_directory>"
+    exit 1
+fi
+
+target_dir=$(realpath "$1") # assign full path to the input dir
+
+echo "Start to organize $target_dir dir."
+
+for file in "$target_dir"/*.*; do    # iterate all files in target_dir
+    if [ -f "$file" ]; then          # check whether file is not a dict
+        filename=$(basename "$file") # assing filename
+        extension="${filename##*.}"  # assign file extension
+        mkdir -p "$extension"        # check if a dir exists or create
+        echo "Moving $filename to the $extension dir."
+        mv "$file" "${extension}/$filename" # move file to created dir
+    fi
+done
+echo "All files moved successfully."
