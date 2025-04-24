@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# validation
+declare -a todo_commands=("add" "remove" "show")
+
+command_in_list() {
+    local input_command=$1
+
+    for i in "${todo_commands[@]}"; do
+        if [[ "$i" == "$input_command" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+if command_in_list "$1"; then
+    declare user_command=$1
+    echo "Command exists: $1"
+else
+    echo "Commands does not exist: $1"
+fi
+
+# logic
+show() {
+    echo "Showing all data"
+}
+add() {
+    local task
+    printf "task => "
+    read -r task
+    if [[ -n "$task" && "${task,,}" != "none" ]]; then
+        echo "Adding: $task"
+    else
+        echo "[WARNING] There no any task."
+    fi
+}
+remove() {
+    local id
+    printf "id => "
+    read -r id
+    if [[ "$id" =~ ^-?[0-9]+$ ]]; then
+        echo "Removing: $id"
+    else
+        echo "[WARNING] Please write a correct task id."
+    fi
+}
+
+case "$user_command" in
+show) show ;;
+add) add ;;
+remove) remove ;;
+esac
