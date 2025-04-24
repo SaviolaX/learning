@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+declare file="1.txt"
+declare tmp_file="temp.txt"
+
 # validation
 declare -a todo_commands=("add" "remove" "show")
 
@@ -18,19 +21,51 @@ if command_in_list "$1"; then
     declare user_command=$1
     echo "Command exists: $1"
 else
-    echo "Commands does not exist: $1"
+    echo "[ERROR] Commands does not exist: $1"
 fi
 
 # logic
+
+numerate_lines_in_file() {
+    mapfile -t lines <"$file"
+
+    i=1
+    touch "$tmp_file"
+    for line in "${lines[@]}"; do
+        echo "$i. $line" >>"$tmp_file"
+        ((i++))
+    done
+    mv "$tmp_file" "$file"
+}
+
 show() {
-    echo "Showing all data"
+    mapfile -t lines <"$file"
+
+    for line in "${lines[@]}"; do
+        echo "$line"
+    done
 }
 add() {
     local task
     printf "task => "
     read -r task
     if [[ -n "$task" && "${task,,}" != "none" ]]; then
+        mapfile -t lines <"$file"
+
+        i=1
+        touch "$tmp_file"
+        for line in "${lines[@]}"; do
+            # Remove everything before the first dot and the dot itself
+            clean_line="${line#*.}"
+            clean_line="${clean_line#"${clean_line%%[![:space:]]*}"}" # Trim leading spaces
+
+            echo "$i. $clean_line" >>"$tmp_file"
+            ((i++))
+        done
+        echo "$i. $task" >>"$tmp_file"
         echo "Adding: $task"
+        mv "$tmp_file" "$file"
+        show
     else
         echo "[WARNING] There no any task."
     fi
@@ -40,7 +75,22 @@ remove() {
     printf "id => "
     read -r id
     if [[ "$id" =~ ^-?[0-9]+$ ]]; then
-        echo "Removing: $id"
+        mapfile -t lines <"$file"
+
+        i=1
+        touch "$tmp_file"
+        for line in "${lines[@]}"; do
+            if [[ "${line%%.*}" != "${id}" ]]; then
+                # Remove everything before the first dot and the dot itself
+                clean_line="${line#*.}"
+                clean_line="${clean_line#"${clean_line%%[![:space:]]*}"}" # Trim leading spaces
+                echo "$i. $clean_line" >>"$tmp_file"
+                ((i++))
+            fi
+        done
+        mv "$tmp_file" "$file"
+        echo "Removing task #: $id"
+        show
     else
         echo "[WARNING] Please write a correct task id."
     fi
