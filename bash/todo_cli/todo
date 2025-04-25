@@ -25,17 +25,40 @@ else
 fi
 
 # logic
-
-numerate_lines_in_file() {
+rewrite_lines() {
+    local id_or_task="$1"
     mapfile -t lines <"$file"
-
-    i=1
     touch "$tmp_file"
-    for line in "${lines[@]}"; do
-        echo "$i. $line" >>"$tmp_file"
-        ((i++))
-    done
-    mv "$tmp_file" "$file"
+
+    case "$user_command" in
+    add)
+        i=1
+        for line in "${lines[@]}"; do
+            # Remove everything before the first dot and the dot itself
+            clean_line="${line#*.}"
+            clean_line="${clean_line#"${clean_line%%[![:space:]]*}"}" # Trim leading spaces
+
+            echo "$i. $clean_line" >>"$tmp_file"
+            ((i++))
+        done
+        echo "$i. $id_or_task" >>"$tmp_file"
+        echo "Adding: $id_or_task"
+        ;;
+    remove)
+        i=1
+        for line in "${lines[@]}"; do
+            if [[ "${line%%.*}" != "${id_or_task}" ]]; then
+                # Remove everything before the first dot and the dot itself
+                clean_line="${line#*.}"
+                clean_line="${clean_line#"${clean_line%%[![:space:]]*}"}" # Trim leading spaces
+                echo "$i. $clean_line" >>"$tmp_file"
+                ((i++))
+            fi
+        done
+        echo "Removing task #: $id"
+        ;;
+    esac
+
 }
 
 show() {
@@ -50,20 +73,7 @@ add() {
     printf "task => "
     read -r task
     if [[ -n "$task" && "${task,,}" != "none" ]]; then
-        mapfile -t lines <"$file"
-
-        i=1
-        touch "$tmp_file"
-        for line in "${lines[@]}"; do
-            # Remove everything before the first dot and the dot itself
-            clean_line="${line#*.}"
-            clean_line="${clean_line#"${clean_line%%[![:space:]]*}"}" # Trim leading spaces
-
-            echo "$i. $clean_line" >>"$tmp_file"
-            ((i++))
-        done
-        echo "$i. $task" >>"$tmp_file"
-        echo "Adding: $task"
+        rewrite_lines "$task"
         mv "$tmp_file" "$file"
         show
     else
@@ -75,21 +85,8 @@ remove() {
     printf "id => "
     read -r id
     if [[ "$id" =~ ^-?[0-9]+$ ]]; then
-        mapfile -t lines <"$file"
-
-        i=1
-        touch "$tmp_file"
-        for line in "${lines[@]}"; do
-            if [[ "${line%%.*}" != "${id}" ]]; then
-                # Remove everything before the first dot and the dot itself
-                clean_line="${line#*.}"
-                clean_line="${clean_line#"${clean_line%%[![:space:]]*}"}" # Trim leading spaces
-                echo "$i. $clean_line" >>"$tmp_file"
-                ((i++))
-            fi
-        done
+        rewrite_lines "$id"
         mv "$tmp_file" "$file"
-        echo "Removing task #: $id"
         show
     else
         echo "[WARNING] Please write a correct task id."

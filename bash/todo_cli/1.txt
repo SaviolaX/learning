@@ -1,6 +1,4 @@
-1. some text is in this file 4.
-2. some text is in this file 5.
-3. new text added
-4. another new task
-5. wash a car
-6. make a bad
+1. another new task
+2. wash a car
+3. make a bad
+4. fix the TV
