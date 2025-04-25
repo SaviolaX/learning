@@ -1,0 +1,93 @@
+#!/bin/bash
+
+declare store="1.csv"
+
+reset="\033[0m"
+red="\033[0;31m"
+green="\033[0;32m"
+yellow="\033[0;33m"
+
+# create csv file if not exists
+if [ ! -f "$store" ]; then
+    echo "order,status,date,task" >"$store"
+fi
+
+# validation
+declare -a todo_commands=("add" "remove" "show" "finish" "unfinish")
+
+command_in_list() {
+    local input_command=$1
+
+    for i in "${todo_commands[@]}"; do
+        if [[ "$i" == "$input_command" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+if command_in_list "$1"; then
+    declare user_command=$1
+else
+    echo "[ERROR] Command $1 does not exist."
+    echo "[INFO] Existing commands: ${todo_commands[*]}"
+
+fi
+
+show() {
+    printf "|%s|%s|%s|%s|\n" "Order" "Status" "Date" "Task"
+
+    i=1
+    tail -n +2 "$store" | while IFS=',' read -r status date task; do
+        if [ "$status" == "done" ]; then
+            echo -e "| $yellow$i$reset | $green$status$reset | $date | $yellow$task$reset "
+        else
+            echo -e "| $yellow$i$reset | $red$status$reset | $date | $yellow$task$reset "
+        fi
+        ((i++))
+    done
+
+}
+add() {
+    local task
+    local status="undone"
+
+    local date
+    date=$(date -d today +"%m.%d.%Y")
+
+    printf "task -> "
+    read -r task
+
+    echo "$status,$date,$task" >>"$store"
+    show
+}
+remove() {
+    local line_to_del
+    printf "id -> "
+    read -r line_to_del
+    awk -v n="$line_to_del" 'NR!=n+1' "$store" >tmp && mv tmp "$store"
+    show
+}
+finish() {
+    local line_to_edit
+    printf "id -> "
+    read -r line_to_edit
+    awk -F, -v OFS=',' -v n="$line_to_edit" 'NR==n+1 {$1="done"} 1' "$store" >tmp && mv tmp "$store"
+    echo "Finish task: $line_to_edit"
+    show
+}
+unfinish() {
+    local line_to_edit
+    printf "id -> "
+    read -r line_to_edit
+    awk -F, -v OFS=',' -v n="$line_to_edit" 'NR==n+1 {$1="undone"} 1' "$store" >tmp && mv tmp "$store"
+    echo "Unfinish task: $line_to_edit"
+    show
+}
+case "$user_command" in
+add) add ;;
+remove) remove ;;
+show) show ;;
+finish) finish ;;
+unfinish) unfinish ;;
+esac
