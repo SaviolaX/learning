@@ -1,0 +1,14 @@
+#!/bin/bash
+
+longest=1
+for i in "$@"; do
+    if ((${#i} > longest)); then
+        longest=${#i}
+    fi
+done
+
+item=1
+for i in "$@"; do
+    printf "%-${longest}s <-- %s\n" "$i" "$item"
+    ((item++))
+done

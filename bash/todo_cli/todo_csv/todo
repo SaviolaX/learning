@@ -13,7 +13,7 @@ if [ ! -f "$store" ]; then
 fi
 
 # validation
-declare -a todo_commands=("add" "remove" "show" "finish" "unfinish")
+declare -a todo_commands=("add" "remove" "show" "finish" "unfinish" "help")
 
 command_in_list() {
     local input_command=$1
@@ -35,17 +35,19 @@ else
 fi
 
 show() {
-    printf "|%s|%s|%s|%s|\n" "Order" "Status" "Date" "Task"
+    printf "|  %s  |  %s  |    %s    |  %s  \n" "Order" "Status" "Date" "Task"
+    printf "|--%s--|--%s--|----%s----|--%s--\n" "-----" "------" "----" "----"
 
     i=1
     tail -n +2 "$store" | while IFS=',' read -r status date task; do
         if [ "$status" == "done" ]; then
-            echo -e "| $yellow$i$reset | $green$status$reset | $date | $yellow$task$reset "
+            echo -e "|    $yellow$i$reset    |   $green$status$reset   | $date | $yellow$task$reset "
         else
-            echo -e "| $yellow$i$reset | $red$status$reset | $date | $yellow$task$reset "
+            echo -e "|    $yellow$i$reset    |  $red$status$reset  | $date | $yellow$task$reset "
         fi
         ((i++))
     done
+    echo "|---------|----------|------------|--------"
 
 }
 add() {
@@ -70,7 +72,7 @@ remove() {
 }
 finish() {
     local line_to_edit
-    printf "id -> "
+    printf "# -> "
     read -r line_to_edit
     awk -F, -v OFS=',' -v n="$line_to_edit" 'NR==n+1 {$1="done"} 1' "$store" >tmp && mv tmp "$store"
     echo "Finish task: $line_to_edit"
@@ -78,11 +80,21 @@ finish() {
 }
 unfinish() {
     local line_to_edit
-    printf "id -> "
+    printf "# -> "
     read -r line_to_edit
     awk -F, -v OFS=',' -v n="$line_to_edit" 'NR==n+1 {$1="undone"} 1' "$store" >tmp && mv tmp "$store"
     echo "Unfinish task: $line_to_edit"
     show
+}
+helpx() {
+    echo "Todo CLI app."
+    echo "Commands: "
+    echo "      add: add a new task"
+    echo "     show: show all tasks"
+    echo "   remove: remove a task"
+    echo "   finish: change task status to 'done'"
+    echo " unfinish: change task status to 'undone'"
+
 }
 case "$user_command" in
 add) add ;;
@@ -90,4 +102,5 @@ remove) remove ;;
 show) show ;;
 finish) finish ;;
 unfinish) unfinish ;;
+help) helpx ;;
 esac
