@@ -1,0 +1,22 @@
+#!/bin/bash
+
+echo "======= System Info Dashboard ======="
+
+# CPU usage
+echo "CPU usage: "
+top -bn1 | grep "Cpu(s)" | awk '{print "Usage: " $2 "% user, " $4 "% system, " $8 "% idle"}'
+
+# Memory usage
+echo ""
+echo "Memory usage: "
+free -h | awk '/Mem:/ {print "Used: " $3 ", Free: " $4 ", Total: " $2}'
+
+# Disk usage
+echo ""
+echo "Disk Usage: "
+df -h | awk '$NF=="/"{print "Used: " $3 ", Available: " $4 ", Total: " $2}'
+
+# Network IP address
+echo ""
+echo "Network: "
+ip addr show enp3s0 | grep "inet" | awk '{print $2}' | cut -d '/' -f1
