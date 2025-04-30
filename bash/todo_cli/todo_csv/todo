@@ -15,6 +15,8 @@ fi
 # validation
 declare -a todo_commands=("add" "remove" "show" "finish" "unfinish" "help")
 
+s
+
 command_in_list() {
     local input_command=$1
 

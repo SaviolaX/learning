@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [[ "$1" =~ ^[0-9]+$ ]]; then
+    time_start="$1"
+    time_in_sec=60*"$time_start"
+    while [ "$time_start" -gt 0 ]; do
+        date -u -d @"$time_in_sec" +"%H:%M:%S"
+        ((time_start--))
+        sleep 1
+    done
+else
+    echo "[ERROR] Your input is not an integer."
+fi
