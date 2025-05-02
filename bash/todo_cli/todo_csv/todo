@@ -1,4 +1,5 @@
-#!/bin/bash
+#
+#/bin/bash
 
 declare store="1.csv"
 
