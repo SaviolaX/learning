@@ -1,6 +1,8 @@
 package todo
 
 import (
+	"os"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -109,8 +111,6 @@ func TestDelete(t *testing.T) {
 		correct_index := 2
 		todos.Delete(correct_index)
 
-		t.Log(todos)
-
 		for _, i := range todos {
 			if i.Task == task_2 {
 				t.Errorf("Task %v was not deleted.", correct_index)
@@ -118,7 +118,70 @@ func TestDelete(t *testing.T) {
 		}
 	})
 }
+func TestStore(t *testing.T) {
+	todos := Todos{
+		item{
+			Task:        "new task",
+			Done:        false,
+			CreatedAt:   time.Now(),
+			CompletedAt: time.Time{},
+		},
+	}
+
+	// create tmp json file
+	tmpFile, err := os.CreateTemp("", "store_test_*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = todos.Store(tmpFile.Name())
+	if err != nil {
+		t.Errorf("Could not write into file: %v", err)
+	}
+
+	// check if file is not empty
+	info, err := os.Stat(tmpFile.Name())
+	if err != nil || info.Size() == 0 {
+		t.Errorf("File not written or is empty")
+	}
+
+}
 
 func TestLoad(t *testing.T) {
+	todos := Todos{
+		item{
+			Task:        "new task",
+			Done:        false,
+			CreatedAt:   time.Now(),
+			CompletedAt: time.Time{},
+		},
+	}
+
+	// create tmp json file
+	tmpFile, err := os.CreateTemp("", "store_test_*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	err = todos.Store(tmpFile.Name())
+	if err != nil {
+		t.Errorf("Could not write into file: %v", err)
+	}
+
+	todos = Todos{}
+
+	err = todos.Load(tmpFile.Name())
+	if err != nil {
+		t.Errorf("Load from tmp file failed: %v", err)
+	}
+
+	got := todos[0].Task
+	want := "new task"
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Expected %v, got %v", want, got)
+	}
 
 }

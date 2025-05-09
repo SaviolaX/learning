@@ -94,8 +94,12 @@ func (t *Todos) Store(filename string) error {
 }
 
 func (t *Todos) Print() {
-	for i, item := range *t {
-		i++ // to start count from 1 instead 0
-		fmt.Printf("%d - %s - %v - %s\n", i, item.Task, item.Done, item.CreatedAt)
+	if len(*t) == 0 {
+		fmt.Println("No tasks...")
+	} else {
+		for i, item := range *t {
+			i++ // to start count from 1 instead 0
+			fmt.Printf("%d - %s - %v - %s\n", i, item.Task, item.Done, item.CreatedAt)
+		}
 	}
 }
