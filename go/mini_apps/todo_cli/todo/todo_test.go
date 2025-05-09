@@ -1,4 +1,4 @@
-package main
+package todo
 
 import (
 	"testing"
@@ -75,13 +75,50 @@ func TestDelete(t *testing.T) {
 		}
 	})
 	t.Run("correct index", func(t *testing.T) {
-		incorrect_index := 1
-		todos.Delete(incorrect_index)
+		correct_index := 1
+		todos.Delete(correct_index)
 
 		if len(todos) > 0 {
 			t.Error("Task was not deleted.")
 		}
 
 	})
+	t.Run("delete a task from the middle of the todos list", func(t *testing.T) {
+		task_1 := "task_1"
+		task_2 := "task 2"
+		task_3 := "task 3"
+		todos := Todos{
+			item{
+				Task:        task_1,
+				Done:        false,
+				CreatedAt:   time.Now(),
+				CompletedAt: time.Time{},
+			},
+			item{
+				Task:        task_2,
+				Done:        false,
+				CreatedAt:   time.Now(),
+				CompletedAt: time.Time{},
+			}, item{
+				Task:        task_3,
+				Done:        false,
+				CreatedAt:   time.Now(),
+				CompletedAt: time.Time{},
+			},
+		}
+		correct_index := 2
+		todos.Delete(correct_index)
+
+		t.Log(todos)
+
+		for _, i := range todos {
+			if i.Task == task_2 {
+				t.Errorf("Task %v was not deleted.", correct_index)
+			}
+		}
+	})
+}
+
+func TestLoad(t *testing.T) {
 
 }
