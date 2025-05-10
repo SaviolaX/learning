@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"time"
 )
 
@@ -31,6 +32,7 @@ func (t *Todos) Add(task string) {
 
 func (t *Todos) Complete(index int) error {
 	ls := *t
+
 	// index has to start from 1
 	if index <= 0 || index > len(ls) {
 		return errors.New("invalid index")
@@ -49,7 +51,7 @@ func (t *Todos) Delete(index int) error {
 		return errors.New("invalid index")
 	}
 
-	*t = append(ls[:index-1], ls[index:]...)
+	*t = slices.Delete(ls, index-1, index)
 
 	return nil
 }
@@ -99,7 +101,8 @@ func (t *Todos) Print() {
 	} else {
 		for i, item := range *t {
 			i++ // to start count from 1 instead 0
-			fmt.Printf("%d - %s - %v - %s\n", i, item.Task, item.Done, item.CreatedAt)
+			fmt.Printf("%d - %s - %v - %s\n", i, item.Task, item.Done,
+				item.CreatedAt.Format("2006-01-02"))
 		}
 	}
 }
