@@ -2,11 +2,11 @@ package blogrenderer_test
 
 import (
 	"bytes"
+	"io"
 	"testing"
-    "io"
 
-    approvals "github.com/approvals/go-approval-tests"
 	blogrenderer "example.com/hello/templating"
+	approvals "github.com/approvals/go-approval-tests"
 )
 
 func TestRender(t *testing.T) {
@@ -19,32 +19,32 @@ func TestRender(t *testing.T) {
 		}
 	)
 
-    postRenderer, err := blogrenderer.NewPostRenderer()
+	postRenderer, err := blogrenderer.NewPostRenderer()
 
-    if err != nil {
-        t.Fatal(err)
-    }
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Run("it converts a single post into HTML", func(t *testing.T) {
 		buf := bytes.Buffer{}
 
-        if err := postRenderer.Render(&buf, aPost); err != nil {
-            t.Fatal(err)
-        }
+		if err := postRenderer.Render(&buf, aPost); err != nil {
+			t.Fatal(err)
+		}
 
-        approvals.VerifyString(t, buf.String())
+		approvals.VerifyString(t, buf.String())
 	})
-    t.Run("it renders an index of posts", func(t *testing.T) {
-        buf := bytes.Buffer{}
-        posts := []blogrenderer.Post{{Title: "Hello World"}, {Title: "Hello World 2"}}
-        if err := postRenderer.RenderIndex(&buf, posts); err != nil {
-            t.Fatal(err)
-        }
-    })
+	t.Run("it renders an index of posts", func(t *testing.T) {
+		buf := bytes.Buffer{}
+		posts := []blogrenderer.Post{{Title: "Hello World"}, {Title: "Hello World 2"}}
+		if err := postRenderer.RenderIndex(&buf, posts); err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 func BenchmarkRender(b *testing.B) {
-    var (
+	var (
 		aPost = blogrenderer.Post{
 			Title:       "hello whole world",
 			Body:        "This is a post",
@@ -53,14 +53,14 @@ func BenchmarkRender(b *testing.B) {
 		}
 	)
 
-    postRenderer, err := blogrenderer.NewPostRenderer()
+	postRenderer, err := blogrenderer.NewPostRenderer()
 
-    if err != nil {
-        b.Fatal(err)
-    }
+	if err != nil {
+		b.Fatal(err)
+	}
 
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
-        postRenderer.Render(io.Discard, aPost)
-    }
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		postRenderer.Render(io.Discard, aPost)
+	}
 }
