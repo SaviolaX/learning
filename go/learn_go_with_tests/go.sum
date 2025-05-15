@@ -2,3 +2,5 @@ github.com/approvals/go-approval-tests v1.5.0 h1:4t8BL8xwrsR2BNhHIZHBmf43SYmkSmk
 github.com/approvals/go-approval-tests v1.5.0/go.mod h1:i7AlHlLqLyxTby+MnSFgxkObjFlsywI46fnOitjMBiU=
 github.com/gomarkdown/markdown v0.0.0-20250311123330-531bef5e742b h1:EY/KpStFl60qA17CptGXhwfZ+k1sFNJIUNR8DdbcuUk=
 github.com/gomarkdown/markdown v0.0.0-20250311123330-531bef5e742b/go.mod h1:JDGcbDT52eL4fju3sZ4TeHGsQwhG9nbDV21aMyhwPoA=
+github.com/quii/go-graceful-shutdown v0.6.0 h1:IIg2CnIdQWk/0yN+MOXdD5BJfa2CadfI50G7k+MopuU=
+github.com/quii/go-graceful-shutdown v0.6.0/go.mod h1:ovmTZZhfF99Z1JEmQjMzf+YelQDbUQ0L/E/fc5KFdiM=
