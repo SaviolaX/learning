@@ -15,6 +15,7 @@ const (
 	GET_all_posts  = "/posts"
 	AddPostPath    = "/posts/add"
 	DeletePostPath = "/posts/delete/:id"
+	UpdatePostPath = "/posts/update/:id"
 )
 
 func TestAddPost(t *testing.T) {
@@ -101,7 +102,6 @@ func TestPost(t *testing.T) {
 
 // test for GET /posts
 func TestPosts(t *testing.T) {
-
 	t.Run("return all posts", func(t *testing.T) {
 		testStorage := InMemoryDB{}
 		testStorage.posts = append(testStorage.posts, Post{
@@ -165,17 +165,18 @@ func TestPosts(t *testing.T) {
 
 func TestDeletePost(t *testing.T) {
 	testStorage := InMemoryDB{}
-	testStorage.posts = append(testStorage.posts, Post{
-		Id:     1,
-		Author: "testUser",
-		Title:  "testTitle",
-		Body:   "testBody",
-	})
 
 	router := setupRouter()
 	router.DELETE(DeletePostPath, deletePost(&testStorage))
 
 	t.Run("post deleted", func(t *testing.T) {
+		testStorage.posts = append(testStorage.posts, Post{
+			Id:     1,
+			Author: "testUser",
+			Title:  "testTitle",
+			Body:   "testBody",
+		})
+
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("DELETE", "/posts/delete/1", nil)
 		router.ServeHTTP(w, req)
@@ -190,4 +191,75 @@ func TestDeletePost(t *testing.T) {
 		wantStorageLen := 0
 		assert.Equal(t, storagePostsLen, wantStorageLen)
 	})
+	t.Run("post not found", func(t *testing.T) {
+		testStorage.posts = append(testStorage.posts, Post{
+			Id:     1,
+			Author: "testUser",
+			Title:  "testTitle",
+			Body:   "testBody",
+		})
+
+		incorrectId := "0000"
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("DELETE", "/posts/delete/"+incorrectId, nil)
+		router.ServeHTTP(w, req)
+
+		want := map[string]string{"error": "Post not found"}
+		wantJSON, _ := json.Marshal(want)
+
+		assert.Equal(t, w.Code, 404)
+		assert.Equal(t, w.Body.String(), string(wantJSON))
+	})
+	t.Run("id param is not an integer", func(t *testing.T) {
+		incorrectId := "notIntegerID"
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("DELETE", "/posts/delete/"+incorrectId, nil)
+		router.ServeHTTP(w, req)
+
+		want := map[string]string{"error": "ID param is not an integer"}
+		wantJSON, _ := json.Marshal(want)
+
+		assert.Equal(t, w.Code, 404)
+		assert.Equal(t, w.Body.String(), string(wantJSON))
+	})
+}
+
+func TestUpdatePost(t *testing.T) {
+	testStorage := InMemoryDB{}
+
+	router := setupRouter()
+	router.PUT(UpdatePostPath, updatePost(&testStorage))
+
+	t.Run("post updated", func(t *testing.T) {
+		testStorage.posts = append(testStorage.posts, Post{
+			Id:     1,
+			Author: "testUser",
+			Title:  "testTitle",
+			Body:   "testBody",
+		})
+
+		changedPost := Post{
+			Id:     1,
+			Author: "testUser",
+			Title:  "updatedTitle",
+			Body:   "updatedBody",
+		}
+		changedPostJson, _ := json.Marshal(changedPost)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("PUT", "/posts/update/1", strings.NewReader(string(changedPostJson)))
+		router.ServeHTTP(w, req)
+
+		want := map[string]string{"message": "Post 1 updated"}
+		wantJSON, _ := json.Marshal(want)
+
+		assert.Equal(t, w.Code, 200)
+		assert.Equal(t, w.Body.String(), string(wantJSON))
+
+		post := testStorage.posts[0]
+		assert.Equal(t, changedPost, post)
+	})
+
 }

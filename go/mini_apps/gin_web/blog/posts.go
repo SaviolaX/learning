@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"slices"
 )
 
@@ -18,10 +17,9 @@ type InMemoryDB struct {
 }
 
 func (i *InMemoryDB) Delete(id int) error {
-	for i, post := range storage.posts {
+	for idx, post := range i.posts {
 		if post.Id == id {
-			storage.posts = slices.Delete(storage.posts, i, i+1)
-			fmt.Println(storage.posts)
+			i.posts = slices.Delete(i.posts, idx, idx+1)
 			return nil
 		}
 	}
