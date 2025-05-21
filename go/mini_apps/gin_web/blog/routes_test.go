@@ -11,32 +11,20 @@ import (
 )
 
 const (
-	GET_post_path = "/posts/:postId"
-	GET_all_posts = "/posts"
-	AddPostPath   = "/posts/add"
+	GET_post_path  = "/posts/:id"
+	GET_all_posts  = "/posts"
+	AddPostPath    = "/posts/add"
+	DeletePostPath = "/posts/delete/:id"
 )
 
-var testStorage = InMemoryDB{
-	Post{
-		Id:     1,
-		Author: "testUser",
-		Title:  "testPost1",
-		Body:   "testBody",
-	},
-	Post{
-		Id:     2,
-		Author: "testUser",
-		Title:  "testPost2",
-		Body:   "testBody",
-	},
-}
-
 func TestAddPost(t *testing.T) {
+	testStorage := InMemoryDB{}
+
 	router := setupRouter()
 	router.POST(AddPostPath, addPost(&testStorage))
 
 	newPost := Post{
-		Id:     3,
+		Id:     1,
 		Author: "testUser",
 		Title:  "testPost3",
 		Body:   "testBody",
@@ -48,22 +36,28 @@ func TestAddPost(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/posts/add", strings.NewReader(string(newPostJson)))
 	router.ServeHTTP(w, req)
 
-	//	expectedPosts := 3
+	expectedResponse := map[string]string{"message": "A new post added"}
+	expectedResponseJson, _ := json.Marshal(expectedResponse)
+	allPostsLen := len(testStorage.posts)
 
+	assert.Equal(t, allPostsLen, 1)
 	assert.Equal(t, w.Code, 201)
+	assert.Equal(t, w.Body.String(), string(expectedResponseJson))
 }
 
 // test for GET /posts/:id
 func TestPost(t *testing.T) {
-	router := setupRouter()
-	router.GET(GET_post_path, getPost(&testStorage))
-
 	testPost := Post{
 		Id:     1,
 		Author: "testUser",
 		Title:  "testPost1",
 		Body:   "testBody",
 	}
+	testStorage := InMemoryDB{}
+	testStorage.posts = append(testStorage.posts, testPost)
+
+	router := setupRouter()
+	router.GET(GET_post_path, getPost(&testStorage))
 
 	postJson, _ := json.Marshal(testPost)
 
@@ -109,6 +103,23 @@ func TestPost(t *testing.T) {
 func TestPosts(t *testing.T) {
 
 	t.Run("return all posts", func(t *testing.T) {
+		testStorage := InMemoryDB{}
+		testStorage.posts = append(testStorage.posts, Post{
+			Id:     1,
+			Author: "testUser",
+			Title:  "testPost1",
+			Body:   "testBody",
+		})
+		testStorage.posts = append(testStorage.posts, Post{
+			Id:     2,
+			Author: "testUser",
+			Title:  "testPost2",
+			Body:   "testBody",
+		})
+
+		router := setupRouter()
+		router.GET(GET_all_posts, getPosts(&testStorage))
+
 		posts := map[string][]Post{
 			"posts": {
 				{
@@ -125,18 +136,14 @@ func TestPosts(t *testing.T) {
 				},
 			},
 		}
-
-		router := setupRouter()
-		router.GET(GET_all_posts, getPosts(&testStorage))
-
-		postsJson, _ := json.Marshal(posts)
+		responsePostsJson, _ := json.Marshal(posts)
 
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/posts", nil)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, w.Code, 200)
-		assert.Equal(t, w.Body.String(), string(postsJson))
+		assert.Equal(t, w.Body.String(), string(responsePostsJson))
 	})
 	t.Run("no posts", func(t *testing.T) {
 		emptyStorage := InMemoryDB{}
@@ -148,10 +155,39 @@ func TestPosts(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/posts", nil)
 		router.ServeHTTP(w, req)
 
-		want := map[string][]Post{"posts": {}}
+		want := map[string][]Post{"posts": nil}
 		wantJSON, _ := json.Marshal(want)
 
 		assert.Equal(t, w.Code, 200)
 		assert.Equal(t, w.Body.String(), string(wantJSON))
+	})
+}
+
+func TestDeletePost(t *testing.T) {
+	testStorage := InMemoryDB{}
+	testStorage.posts = append(testStorage.posts, Post{
+		Id:     1,
+		Author: "testUser",
+		Title:  "testTitle",
+		Body:   "testBody",
+	})
+
+	router := setupRouter()
+	router.DELETE(DeletePostPath, deletePost(&testStorage))
+
+	t.Run("post deleted", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("DELETE", "/posts/delete/1", nil)
+		router.ServeHTTP(w, req)
+
+		want := map[string]string{"message": "Post 1 deleted"}
+		wantJSON, _ := json.Marshal(want)
+
+		assert.Equal(t, w.Code, 200)
+		assert.Equal(t, w.Body.String(), string(wantJSON))
+
+		storagePostsLen := len(testStorage.posts)
+		wantStorageLen := 0
+		assert.Equal(t, storagePostsLen, wantStorageLen)
 	})
 }

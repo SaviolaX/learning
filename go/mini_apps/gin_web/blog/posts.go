@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"slices"
 )
 
 type Post struct {
@@ -11,21 +13,35 @@ type Post struct {
 	Body   string `json:"body"`
 }
 
-type InMemoryDB []Post
-
-func (i InMemoryDB) GetAll() []Post {
-	return i
+type InMemoryDB struct {
+	posts []Post
 }
 
-func (i InMemoryDB) GetById(id int) (Post, error) {
+func (i *InMemoryDB) Delete(id int) error {
+	for i, post := range storage.posts {
+		if post.Id == id {
+			storage.posts = slices.Delete(storage.posts, i, i+1)
+			fmt.Println(storage.posts)
+			return nil
+		}
+	}
+	return errors.New("Post not found")
+}
+
+func (i *InMemoryDB) Add(post Post) {
+	i.posts = append(i.posts, post)
+}
+
+func (i *InMemoryDB) GetAll() []Post {
+	return i.posts
+}
+
+func (i *InMemoryDB) GetById(id int) (Post, error) {
 	post := Post{}
 
-	for _, p := range i {
+	for _, p := range i.posts {
 		if p.Id == id {
-			post.Id = id
-			post.Author = p.Author
-			post.Title = p.Title
-			post.Body = p.Body
+			post = p
 		}
 	}
 

@@ -8,39 +8,43 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var storage = InMemoryDB{
-	Post{
-		Id:     1,
-		Author: "testUser",
-		Title:  "testPost1",
-		Body:   "testBody",
-	},
-	Post{
-		Id:     2,
-		Author: "testUser",
-		Title:  "testPost2",
-		Body:   "testBody",
-	},
+var storage = InMemoryDB{}
+
+func deletePost(storage *InMemoryDB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postId := c.Param("id")
+
+		idInt, err := strconv.Atoi(postId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "ID param is not an integer"})
+			return
+		}
+
+		err = storage.Delete(idInt)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": fmt.Sprintf("Post %d deleted", idInt),
+		})
+	}
 }
 
 func addPost(storage *InMemoryDB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		idInt, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "ID param is not an integer"})
-			return
-		}
+		var post Post
+		c.BindJSON(&post)
 
-		newPost := Post{
-			Id:     idInt,
-			Author: c.Param("author"),
-			Title:  c.Param("title"),
-			Body:   c.Param("body"),
-		}
+		storage.Add(post)
 
-		updatedStorage := append(*storage, newPost)
-		fmt.Println(updatedStorage)
+		c.JSON(http.StatusCreated, gin.H{
+			"message": "A new post added",
+		})
 	}
 }
 
@@ -55,7 +59,7 @@ func getPosts(storage *InMemoryDB) gin.HandlerFunc {
 
 func getPost(storage *InMemoryDB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		postId := c.Param("postId")
+		postId := c.Param("id")
 
 		idInt, err := strconv.Atoi(postId)
 		if err != nil {
