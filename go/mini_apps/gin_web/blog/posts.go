@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 )
 
@@ -14,6 +15,17 @@ type Post struct {
 
 type InMemoryDB struct {
 	posts []Post
+}
+
+func (i *InMemoryDB) Update(id int, updatedPost Post) error {
+	for idx, post := range i.posts {
+		if post.Id == id {
+			i.posts[idx] = updatedPost
+			return nil
+		}
+	}
+	return errors.New(fmt.Sprintf("Post %d not found", id))
+
 }
 
 func (i *InMemoryDB) Delete(id int) error {

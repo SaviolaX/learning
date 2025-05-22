@@ -259,7 +259,56 @@ func TestUpdatePost(t *testing.T) {
 		assert.Equal(t, w.Body.String(), string(wantJSON))
 
 		post := testStorage.posts[0]
-		assert.Equal(t, changedPost, post)
+		assert.Equal(t, post, changedPost)
+	})
+	t.Run("post not found", func(t *testing.T) {
+		testStorage.posts = append(testStorage.posts, Post{
+			Id:     1,
+			Author: "testUser",
+			Title:  "testTitle",
+			Body:   "testBody",
+		})
+
+		changedPost := Post{
+			Id:     1,
+			Author: "testUser",
+			Title:  "updatedTitle",
+			Body:   "updatedBody",
+		}
+		changedPostJson, _ := json.Marshal(changedPost)
+
+		incorrectId := "0000"
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("PUT", "/posts/update/"+incorrectId, strings.NewReader(string(changedPostJson)))
+		router.ServeHTTP(w, req)
+
+		want := map[string]string{"error": "Post 0 not found"}
+		wantJSON, _ := json.Marshal(want)
+
+		assert.Equal(t, w.Code, 404)
+		assert.Equal(t, w.Body.String(), string(wantJSON))
+	})
+	t.Run("incorrect id", func(t *testing.T) {
+		changedPost := Post{
+			Id:     1,
+			Author: "testUser",
+			Title:  "updatedTitle",
+			Body:   "updatedBody",
+		}
+		changedPostJson, _ := json.Marshal(changedPost)
+
+		incorrectId := "incorrectId"
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("PUT", "/posts/update/"+incorrectId, strings.NewReader(string(changedPostJson)))
+		router.ServeHTTP(w, req)
+
+		want := map[string]string{"error": "ID param is not an integer"}
+		wantJSON, _ := json.Marshal(want)
+
+		assert.Equal(t, w.Code, 404)
+		assert.Equal(t, w.Body.String(), string(wantJSON))
 	})
 
 }

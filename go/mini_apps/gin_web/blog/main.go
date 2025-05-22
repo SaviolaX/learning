@@ -10,6 +10,32 @@ import (
 
 var storage = InMemoryDB{}
 
+func updatePost(storage *InMemoryDB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		postId := c.Param("id")
+
+		var updatedPost Post
+		c.BindJSON(&updatedPost)
+
+		idInt, err := strconv.Atoi(postId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "ID param is not an integer"})
+			return
+		}
+
+		err = storage.Update(idInt, updatedPost)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Post 1 updated",
+		})
+	}
+}
+
 func deletePost(storage *InMemoryDB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		postId := c.Param("id")
