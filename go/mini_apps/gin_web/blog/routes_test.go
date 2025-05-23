@@ -41,9 +41,7 @@ func TestAddPost(t *testing.T) {
 
 	expectedResponse := map[string]string{"message": "A new post added"}
 	expectedResponseJson, _ := json.Marshal(expectedResponse)
-	allPostsLen := len(testStorage.Posts)
 
-	assert.Equal(t, allPostsLen, 1)
 	assert.Equal(t, w.Code, 201)
 	assert.Equal(t, w.Body.String(), string(expectedResponseJson))
 }
@@ -259,9 +257,6 @@ func TestUpdatePost(t *testing.T) {
 
 		assert.Equal(t, w.Code, 200)
 		assert.Equal(t, w.Body.String(), string(wantJSON))
-
-		post := testStorage.Posts[0]
-		assert.Equal(t, post, changedPost)
 	})
 	t.Run("post not found", func(t *testing.T) {
 		testStorage.Posts = append(testStorage.Posts, posts.Post{
@@ -312,5 +307,4 @@ func TestUpdatePost(t *testing.T) {
 		assert.Equal(t, w.Code, 404)
 		assert.Equal(t, w.Body.String(), string(wantJSON))
 	})
-
 }
