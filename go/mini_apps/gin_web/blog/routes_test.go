@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blog/posts"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -18,13 +19,14 @@ const (
 	UpdatePostPath = "/posts/update/:id"
 )
 
+// test for POST /posts/add
 func TestAddPost(t *testing.T) {
-	testStorage := InMemoryDB{}
+	testStorage := posts.InMemoryDB{}
 
 	router := setupRouter()
 	router.POST(AddPostPath, addPost(&testStorage))
 
-	newPost := Post{
+	newPost := posts.Post{
 		Id:     1,
 		Author: "testUser",
 		Title:  "testPost3",
@@ -39,7 +41,7 @@ func TestAddPost(t *testing.T) {
 
 	expectedResponse := map[string]string{"message": "A new post added"}
 	expectedResponseJson, _ := json.Marshal(expectedResponse)
-	allPostsLen := len(testStorage.posts)
+	allPostsLen := len(testStorage.Posts)
 
 	assert.Equal(t, allPostsLen, 1)
 	assert.Equal(t, w.Code, 201)
@@ -48,14 +50,14 @@ func TestAddPost(t *testing.T) {
 
 // test for GET /posts/:id
 func TestPost(t *testing.T) {
-	testPost := Post{
+	testPost := posts.Post{
 		Id:     1,
 		Author: "testUser",
 		Title:  "testPost1",
 		Body:   "testBody",
 	}
-	testStorage := InMemoryDB{}
-	testStorage.posts = append(testStorage.posts, testPost)
+	testStorage := posts.InMemoryDB{}
+	testStorage.Posts = append(testStorage.Posts, testPost)
 
 	router := setupRouter()
 	router.GET(GET_post_path, getPost(&testStorage))
@@ -103,14 +105,14 @@ func TestPost(t *testing.T) {
 // test for GET /posts
 func TestPosts(t *testing.T) {
 	t.Run("return all posts", func(t *testing.T) {
-		testStorage := InMemoryDB{}
-		testStorage.posts = append(testStorage.posts, Post{
+		testStorage := posts.InMemoryDB{}
+		testStorage.Posts = append(testStorage.Posts, posts.Post{
 			Id:     1,
 			Author: "testUser",
 			Title:  "testPost1",
 			Body:   "testBody",
 		})
-		testStorage.posts = append(testStorage.posts, Post{
+		testStorage.Posts = append(testStorage.Posts, posts.Post{
 			Id:     2,
 			Author: "testUser",
 			Title:  "testPost2",
@@ -120,7 +122,7 @@ func TestPosts(t *testing.T) {
 		router := setupRouter()
 		router.GET(GET_all_posts, getPosts(&testStorage))
 
-		posts := map[string][]Post{
+		posts := map[string][]posts.Post{
 			"posts": {
 				{
 					Id:     1,
@@ -146,7 +148,7 @@ func TestPosts(t *testing.T) {
 		assert.Equal(t, w.Body.String(), string(responsePostsJson))
 	})
 	t.Run("no posts", func(t *testing.T) {
-		emptyStorage := InMemoryDB{}
+		emptyStorage := posts.InMemoryDB{}
 
 		router := setupRouter()
 		router.GET(GET_all_posts, getPosts(&emptyStorage))
@@ -155,7 +157,7 @@ func TestPosts(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/posts", nil)
 		router.ServeHTTP(w, req)
 
-		want := map[string][]Post{"posts": nil}
+		want := map[string][]posts.Post{"posts": nil}
 		wantJSON, _ := json.Marshal(want)
 
 		assert.Equal(t, w.Code, 200)
@@ -164,13 +166,13 @@ func TestPosts(t *testing.T) {
 }
 
 func TestDeletePost(t *testing.T) {
-	testStorage := InMemoryDB{}
+	testStorage := posts.InMemoryDB{}
 
 	router := setupRouter()
 	router.DELETE(DeletePostPath, deletePost(&testStorage))
 
 	t.Run("post deleted", func(t *testing.T) {
-		testStorage.posts = append(testStorage.posts, Post{
+		testStorage.Posts = append(testStorage.Posts, posts.Post{
 			Id:     1,
 			Author: "testUser",
 			Title:  "testTitle",
@@ -187,12 +189,12 @@ func TestDeletePost(t *testing.T) {
 		assert.Equal(t, w.Code, 200)
 		assert.Equal(t, w.Body.String(), string(wantJSON))
 
-		storagePostsLen := len(testStorage.posts)
+		storagePostsLen := len(testStorage.Posts)
 		wantStorageLen := 0
 		assert.Equal(t, storagePostsLen, wantStorageLen)
 	})
 	t.Run("post not found", func(t *testing.T) {
-		testStorage.posts = append(testStorage.posts, Post{
+		testStorage.Posts = append(testStorage.Posts, posts.Post{
 			Id:     1,
 			Author: "testUser",
 			Title:  "testTitle",
@@ -227,20 +229,20 @@ func TestDeletePost(t *testing.T) {
 }
 
 func TestUpdatePost(t *testing.T) {
-	testStorage := InMemoryDB{}
+	testStorage := posts.InMemoryDB{}
 
 	router := setupRouter()
 	router.PUT(UpdatePostPath, updatePost(&testStorage))
 
 	t.Run("post updated", func(t *testing.T) {
-		testStorage.posts = append(testStorage.posts, Post{
+		testStorage.Posts = append(testStorage.Posts, posts.Post{
 			Id:     1,
 			Author: "testUser",
 			Title:  "testTitle",
 			Body:   "testBody",
 		})
 
-		changedPost := Post{
+		changedPost := posts.Post{
 			Id:     1,
 			Author: "testUser",
 			Title:  "updatedTitle",
@@ -258,18 +260,18 @@ func TestUpdatePost(t *testing.T) {
 		assert.Equal(t, w.Code, 200)
 		assert.Equal(t, w.Body.String(), string(wantJSON))
 
-		post := testStorage.posts[0]
+		post := testStorage.Posts[0]
 		assert.Equal(t, post, changedPost)
 	})
 	t.Run("post not found", func(t *testing.T) {
-		testStorage.posts = append(testStorage.posts, Post{
+		testStorage.Posts = append(testStorage.Posts, posts.Post{
 			Id:     1,
 			Author: "testUser",
 			Title:  "testTitle",
 			Body:   "testBody",
 		})
 
-		changedPost := Post{
+		changedPost := posts.Post{
 			Id:     1,
 			Author: "testUser",
 			Title:  "updatedTitle",
@@ -283,14 +285,14 @@ func TestUpdatePost(t *testing.T) {
 		req, _ := http.NewRequest("PUT", "/posts/update/"+incorrectId, strings.NewReader(string(changedPostJson)))
 		router.ServeHTTP(w, req)
 
-		want := map[string]string{"error": "Post 0 not found"}
+		want := map[string]string{"error": "Post not found"}
 		wantJSON, _ := json.Marshal(want)
 
 		assert.Equal(t, w.Code, 404)
 		assert.Equal(t, w.Body.String(), string(wantJSON))
 	})
 	t.Run("incorrect id", func(t *testing.T) {
-		changedPost := Post{
+		changedPost := posts.Post{
 			Id:     1,
 			Author: "testUser",
 			Title:  "updatedTitle",

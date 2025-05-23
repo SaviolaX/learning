@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blog/posts"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -8,13 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var storage = InMemoryDB{}
+var storage = posts.InMemoryDB{}
 
-func updatePost(storage *InMemoryDB) gin.HandlerFunc {
+func updatePost(storage *posts.InMemoryDB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		postId := c.Param("id")
 
-		var updatedPost Post
+		var updatedPost posts.Post
 		c.BindJSON(&updatedPost)
 
 		idInt, err := strconv.Atoi(postId)
@@ -36,7 +37,7 @@ func updatePost(storage *InMemoryDB) gin.HandlerFunc {
 	}
 }
 
-func deletePost(storage *InMemoryDB) gin.HandlerFunc {
+func deletePost(storage *posts.InMemoryDB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		postId := c.Param("id")
 
@@ -60,10 +61,10 @@ func deletePost(storage *InMemoryDB) gin.HandlerFunc {
 	}
 }
 
-func addPost(storage *InMemoryDB) gin.HandlerFunc {
+func addPost(storage *posts.InMemoryDB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		var post Post
+		var post posts.Post
 		c.BindJSON(&post)
 
 		storage.Add(post)
@@ -74,7 +75,7 @@ func addPost(storage *InMemoryDB) gin.HandlerFunc {
 	}
 }
 
-func getPosts(storage *InMemoryDB) gin.HandlerFunc {
+func getPosts(storage *posts.InMemoryDB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		posts := storage.GetAll()
 		c.JSON(http.StatusOK, gin.H{
@@ -83,7 +84,7 @@ func getPosts(storage *InMemoryDB) gin.HandlerFunc {
 	}
 }
 
-func getPost(storage *InMemoryDB) gin.HandlerFunc {
+func getPost(storage *posts.InMemoryDB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		postId := c.Param("id")
 

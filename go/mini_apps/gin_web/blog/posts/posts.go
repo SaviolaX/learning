@@ -1,8 +1,7 @@
-package main
+package posts
 
 import (
 	"errors"
-	"fmt"
 	"slices"
 )
 
@@ -14,24 +13,23 @@ type Post struct {
 }
 
 type InMemoryDB struct {
-	posts []Post
+	Posts []Post
 }
 
 func (i *InMemoryDB) Update(id int, updatedPost Post) error {
-	for idx, post := range i.posts {
+	for idx, post := range i.Posts {
 		if post.Id == id {
-			i.posts[idx] = updatedPost
+			i.Posts[idx] = updatedPost
 			return nil
 		}
 	}
-	return errors.New(fmt.Sprintf("Post %d not found", id))
-
+	return errors.New("Post not found")
 }
 
 func (i *InMemoryDB) Delete(id int) error {
-	for idx, post := range i.posts {
+	for idx, post := range i.Posts {
 		if post.Id == id {
-			i.posts = slices.Delete(i.posts, idx, idx+1)
+			i.Posts = slices.Delete(i.Posts, idx, idx+1)
 			return nil
 		}
 	}
@@ -39,17 +37,17 @@ func (i *InMemoryDB) Delete(id int) error {
 }
 
 func (i *InMemoryDB) Add(post Post) {
-	i.posts = append(i.posts, post)
+	i.Posts = append(i.Posts, post)
 }
 
 func (i *InMemoryDB) GetAll() []Post {
-	return i.posts
+	return i.Posts
 }
 
 func (i *InMemoryDB) GetById(id int) (Post, error) {
 	post := Post{}
 
-	for _, p := range i.posts {
+	for _, p := range i.Posts {
 		if p.Id == id {
 			post = p
 		}
