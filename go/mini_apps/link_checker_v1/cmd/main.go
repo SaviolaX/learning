@@ -14,7 +14,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("--- URL Checker ---")
 
-	url, err := getInput("Enter your URL: ", reader)
+	url, err := GetInput("Enter your URL: ", reader)
 	if err != nil {
 		fmt.Println("Error reading input:", err)
 	}
@@ -26,7 +26,7 @@ func main() {
 	fmt.Printf("Is reachable: %t\n", urlStatus.Ok)
 }
 
-func getInput(prompt string, r *bufio.Reader) (string, error) {
+func GetInput(prompt string, r *bufio.Reader) (string, error) {
 	fmt.Print(prompt)
 	input, err := r.ReadString('\n')
 	if err != nil {

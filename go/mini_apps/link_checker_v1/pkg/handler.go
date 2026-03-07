@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -25,6 +26,8 @@ func CheckUrl(url string) URLinfo {
 	defer resp.Body.Close()
 
 	isOk := resp.StatusCode >= 200 && resp.StatusCode < 300
+
+	fmt.Println("response status code:", resp.StatusCode)
 
 	return URLinfo{URL: url, Ok: isOk, Status: resp.StatusCode}
 }
