@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	checker "linkCheckerV2/pkg"
 	"os"
 	"strings"
 )
@@ -29,15 +30,43 @@ func main() {
 			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
-		fmt.Println(url)
+
+		result := checker.CheckUrl(url)
+
+		fmt.Printf("URL: %s --> %d\n", result.Url, result.Status)
 
 	case *fileFlag:
-		file, err := GetInput(flag.Args()...)
+		filePath, err := GetInput(flag.Args()...)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
 		}
-		fmt.Println(file)
-		os.Exit(1)
+		lstUrls, err := checker.ReadFile(filePath)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+
+		var formattedUrls []string
+		for _, url := range lstUrls {
+			formattedUrl, err := FormatURL(url)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
+			}
+
+			formattedUrls = append(formattedUrls, formattedUrl)
+		}
+
+		var results []checker.UrlReport
+		for _, url := range formattedUrls {
+			result := checker.CheckUrl(url)
+			results = append(results, result)
+		}
+
+		for _, result := range results {
+			fmt.Printf("URL: %s --> %d\n", result.Url, result.Status)
+		}
 	}
 
 }
