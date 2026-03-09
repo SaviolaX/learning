@@ -14,19 +14,20 @@ type UrlReport struct {
 	Status int
 }
 
-func CheckUrl(url string) UrlReport {
+func CheckUrl(url string, results chan UrlReport) {
 	client := http.Client{Timeout: 5 * time.Second}
 
 	resp, err := client.Get(url)
 	if err != nil {
-		return UrlReport{Url: url, Ok: false, Status: 0}
+		results <- UrlReport{Url: url, Ok: false, Status: 0}
+		return
 	}
 
 	defer resp.Body.Close()
 
 	isOk := resp.StatusCode < 300 && resp.StatusCode >= 200
 
-	return UrlReport{Url: url, Ok: isOk, Status: resp.StatusCode}
+	results <- UrlReport{Url: url, Ok: isOk, Status: resp.StatusCode}
 }
 
 func ReadFile(filepath string) ([]string, error) {

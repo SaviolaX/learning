@@ -31,9 +31,11 @@ func main() {
 			os.Exit(1)
 		}
 
-		result := checker.CheckUrl(url)
+		results := make(chan checker.UrlReport)
+		go checker.CheckUrl(url, results)
 
-		fmt.Printf("URL: %s --> %d\n", result.Url, result.Status)
+		r := <-results
+		fmt.Printf("URL: %s --> %d\n", r.Url, r.Status)
 
 	case *fileFlag:
 		filePath, err := GetInput(flag.Args()...)
@@ -58,17 +60,16 @@ func main() {
 			formattedUrls = append(formattedUrls, formattedUrl)
 		}
 
-		var results []checker.UrlReport
+		results := make(chan checker.UrlReport)
 		for _, url := range formattedUrls {
-			result := checker.CheckUrl(url)
-			results = append(results, result)
+			go checker.CheckUrl(url, results)
 		}
 
-		for _, result := range results {
-			fmt.Printf("URL: %s --> %d\n", result.Url, result.Status)
+		for range formattedUrls {
+			r := <-results
+			fmt.Printf("URL: %s --> %d\n", r.Url, r.Status)
 		}
 	}
-
 }
 
 func GetInput(args ...string) (string, error) {
