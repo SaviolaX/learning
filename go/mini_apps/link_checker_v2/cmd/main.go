@@ -17,6 +17,14 @@ func main() {
 
 }
 
+func prettiPrint(report checker.UrlReport) {
+	if report.Ok == true {
+		fmt.Printf("|✅|%d| -> %s\n", report.Status, report.Url)
+	} else {
+		fmt.Printf("|❌|%d| -> %s\n", report.Status, report.Url)
+	}
+}
+
 func run(args []string) error {
 
 	fs := flag.NewFlagSet("linkCheckerV2", flag.ContinueOnError)
@@ -46,7 +54,7 @@ func run(args []string) error {
 		go checker.CheckUrl(url, results)
 
 		r := <-results
-		fmt.Printf("URL: %s --> %d\n", r.Url, r.Status)
+		prettiPrint(r)
 
 	case *fileFlag:
 		filePath, err := GetInput(fs.Args()...)
@@ -78,7 +86,7 @@ func run(args []string) error {
 
 		for range formattedUrls {
 			r := <-results
-			fmt.Printf("URL: %s --> %d\n", r.Url, r.Status)
+			prettiPrint(r)
 		}
 	}
 
