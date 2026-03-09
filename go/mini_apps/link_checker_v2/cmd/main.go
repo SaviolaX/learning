@@ -10,25 +10,36 @@ import (
 )
 
 func main() {
+	if err := run(os.Args[1:]); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
-	urlFlag := flag.Bool("s", false, "check a single URL")
-	fileFlag := flag.Bool("f", false, "check a list of URLs from file")
+}
 
-	flag.Parse()
+func run(args []string) error {
+
+	fs := flag.NewFlagSet("linkCheckerV2", flag.ContinueOnError)
+
+	urlFlag := fs.Bool("s", false, "check a single URL")
+	fileFlag := fs.Bool("f", false, "check a list of URLs from file")
+
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	switch {
 	case *urlFlag:
-
-		url, err := GetInput(flag.Args()...)
+		url, err := GetInput(fs.Args()...)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
-			os.Exit(1)
+			return err
 		}
 
 		url, err = FormatURL(url)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
-			os.Exit(1)
+			return err
 		}
 
 		results := make(chan checker.UrlReport)
@@ -38,15 +49,15 @@ func main() {
 		fmt.Printf("URL: %s --> %d\n", r.Url, r.Status)
 
 	case *fileFlag:
-		filePath, err := GetInput(flag.Args()...)
+		filePath, err := GetInput(fs.Args()...)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
-			os.Exit(1)
+			return err
 		}
 		lstUrls, err := checker.ReadFile(filePath)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
-			os.Exit(1)
+			return err
 		}
 
 		var formattedUrls []string
@@ -70,6 +81,8 @@ func main() {
 			fmt.Printf("URL: %s --> %d\n", r.Url, r.Status)
 		}
 	}
+
+	return nil
 }
 
 func GetInput(args ...string) (string, error) {
