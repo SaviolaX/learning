@@ -1,44 +1,35 @@
 package hasher
 
 import (
-	"fmt"
+	"crypto/sha256"
+	"encoding/hex"
 	"testing"
 )
 
-func TestHashUrl(t *testing.T) {
+func TestSha256(t *testing.T) {
+	t.Run("empty url", func(t *testing.T) {
+		_, err := Sha256("", 10)
 
-	t.Run("check empty URL error", func(t *testing.T) {
-		emptyUrl := ""
-		maxLen := 10
+		want := "url is empty"
 
-		hasher := Hasher{Url: emptyUrl}
-
-		_, got := hasher.Sha256(maxLen)
-		want := "no url passed into HashUrl"
-
-		if got == nil {
-			t.Fatal("did't get an error but wanted one")
-		}
-
-		if got.Error() != want {
-			t.Errorf("got %q, wat %q", got, want)
+		if err.Error() != want {
+			t.Fatalf("expected 'url is empty', got %v", err)
 		}
 	})
 
-	t.Run("check hashed output", func(t *testing.T) {
+	t.Run("valid hash", func(t *testing.T) {
 		url := "https://google.com"
-		maxLen := 10
 
-		hasher := Hasher{Url: url}
+		got, err := Sha256(url, 10)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
-		got, _ := hasher.Sha256(maxLen)
-		want := 10
+		hash := sha256.Sum256([]byte(url))
+		want := hex.EncodeToString(hash[:])[:10]
 
-		fmt.Println(got)
-
-		if len(got) != want {
-			t.Errorf("got %q, want %q", got, want)
+		if got != want {
+			t.Fatalf("got %s want %s", got, want)
 		}
 	})
-
 }
