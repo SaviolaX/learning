@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	hasher "urlShortener/pkg/hasher"
+	storage "urlShortener/pkg/storage"
 )
 
 const (
@@ -14,9 +15,7 @@ func main() {
 	url := "https://google.com"
 	// badUrl := ""
 
-	hasher := hasher.Hasher{Url: url}
-
-	hashedUrl, err := hasher.Sha256(hashLen)
+	hashedUrl, err := hasher.Sha256(url, hashLen)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -24,6 +23,11 @@ func main() {
 
 	shortUrl := defaultUrl + hashedUrl
 
-	fmt.Println("Hashed URL:", shortUrl)
+	urlPair := storage.URLPair{
+		LongUrl:  url,
+		ShortUrl: shortUrl,
+	}
+
+	fmt.Println("Hashed URL:", urlPair)
 
 }
