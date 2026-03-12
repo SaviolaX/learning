@@ -7,12 +7,13 @@ import (
 )
 
 const (
-	hashLen    = 10
-	defaultUrl = "https://trash-url.com/"
+	hashLen        = 10
+	defaultUrl     = "https://trash-url.com/"
+	defaultStorage = "urlShortenerDB.json"
 )
 
 func main() {
-	url := "https://google.com"
+	url := "https://github.com"
 	// badUrl := ""
 
 	hashedUrl, err := hasher.Sha256(url, hashLen)
@@ -27,6 +28,18 @@ func main() {
 		LongUrl:  url,
 		ShortUrl: shortUrl,
 	}
+
+	urlRepo := storage.Repository{DbPath: defaultStorage}
+
+	data, err := urlRepo.Load()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	data = append(data, urlPair)
+
+	urlRepo.Store(data)
 
 	fmt.Println("Hashed URL:", urlPair)
 
