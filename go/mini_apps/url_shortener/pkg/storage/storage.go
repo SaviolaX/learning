@@ -7,8 +7,8 @@ import (
 )
 
 type URLPair struct {
-	LongUrl  string `json:"longUrl"`
-	ShortUrl string `json:"shortUrl"`
+	LongUrl  string
+	ShortUrl string
 }
 
 type Repository struct {
