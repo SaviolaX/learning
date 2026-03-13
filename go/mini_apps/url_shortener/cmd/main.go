@@ -15,14 +15,15 @@ const (
 )
 
 type Server struct {
-	repo storage.Repository
+	repo      storage.Repository
+	indexPath string
 }
 
 func main() {
 
 	repo := storage.Repository{DbPath: defaultStorage}
 
-	s := &Server{repo: repo}
+	s := &Server{repo: repo, indexPath: "templates/index.html"}
 
 	router := http.NewServeMux()
 
@@ -38,7 +39,7 @@ func main() {
 	}
 }
 
-func buildMap(pairs []storage.URLPair) map[string]string {
+func BuildMap(pairs []storage.URLPair) map[string]string {
 	m := make(map[string]string)
 
 	for _, p := range pairs {
@@ -53,7 +54,7 @@ func (s *Server) homePage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	http.ServeFile(w, r, "./templates/index.html")
+	http.ServeFile(w, r, s.indexPath)
 }
 
 func (s *Server) redirectUrl(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +70,7 @@ func (s *Server) redirectUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urlMap := buildMap(data)
+	urlMap := BuildMap(data)
 	longUrl, ok := urlMap[shortUrl]
 	if !ok {
 		http.NotFound(w, r)
