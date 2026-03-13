@@ -20,6 +20,18 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	}
 	http.ServeFile(w, r, "./templates/index.html")
 }
+func shortenUrl(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "cannot parse form", http.StatusBadRequest)
+	}
+
+	url := r.FormValue("url")
 
 	hashedUrl, err := hasher.Sha256(url, hashLen)
 	if err != nil {
@@ -46,6 +58,5 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 
 	urlRepo.Store(data)
 
-	fmt.Println("Hashed URL:", urlPair)
-
+	w.Write([]byte(shortUrl))
 }
