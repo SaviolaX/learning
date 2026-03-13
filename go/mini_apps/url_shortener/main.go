@@ -38,6 +38,16 @@ func main() {
 	}
 }
 
+func buildMap(pairs []storage.URLPair) map[string]string {
+	m := make(map[string]string)
+
+	for _, p := range pairs {
+		m[p.ShortUrl] = p.LongUrl
+	}
+
+	return m
+}
+
 func (s *Server) homePage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -59,11 +69,11 @@ func (s *Server) redirectUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var longUrl string
-	for _, pair := range data {
-		if pair.ShortUrl == shortUrl {
-			longUrl = pair.LongUrl
-		}
+	urlMap := buildMap(data)
+	longUrl, ok := urlMap[shortUrl]
+	if !ok {
+		http.NotFound(w, r)
+		return
 	}
 
 	http.Redirect(w, r, longUrl, http.StatusFound)
