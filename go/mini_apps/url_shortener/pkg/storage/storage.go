@@ -38,6 +38,9 @@ func (r *Repository) Load() ([]URLPair, error) {
 
 	data, err := os.ReadFile(r.DbPath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return result, nil
+		}
 		return result, fmt.Errorf("read file: %w", err)
 	}
 
