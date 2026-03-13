@@ -13,8 +13,13 @@ const (
 )
 
 func main() {
-	url := "https://github.com"
-	// badUrl := ""
+func homePage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	http.ServeFile(w, r, "./templates/index.html")
+}
 
 	hashedUrl, err := hasher.Sha256(url, hashLen)
 	if err != nil {
