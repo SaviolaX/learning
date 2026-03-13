@@ -20,6 +20,32 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	}
 	http.ServeFile(w, r, "./templates/index.html")
 }
+
+func redirectUrl(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	shortUrl := "http://" + r.Host + r.URL.Path
+
+	urlRepo := storage.Repository{DbPath: defaultStorage}
+
+	data, err := urlRepo.Load()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	var longUrl string
+	for _, pair := range data {
+		if pair.ShortUrl == shortUrl {
+			longUrl = pair.LongUrl
+		}
+	}
+
+	http.Redirect(w, r, longUrl, http.StatusFound)
+}
+
 func shortenUrl(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
