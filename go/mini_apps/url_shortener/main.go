@@ -2,17 +2,34 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	hasher "urlShortener/pkg/hasher"
 	storage "urlShortener/pkg/storage"
 )
 
 const (
 	hashLen        = 10
-	defaultUrl     = "https://trash-url.com/"
+	defaultUrl     = "http://localhost:8080/r/"
 	defaultStorage = "urlShortenerDB.json"
 )
 
 func main() {
+
+	router := http.NewServeMux()
+
+	router.HandleFunc("/", homePage)
+	router.HandleFunc("/short-url", shortenUrl)
+	router.HandleFunc("/r/", redirectUrl)
+
+	port := ":8080"
+	fmt.Println("Starting server on port", port)
+	err := http.ListenAndServe(port, router)
+	if err != nil {
+		log.Fatalf("server stopped: %v", err)
+	}
+}
+
 func homePage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
