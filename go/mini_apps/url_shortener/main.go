@@ -14,13 +14,21 @@ const (
 	defaultStorage = "urlShortenerDB.json"
 )
 
+type Server struct {
+	repo storage.Repository
+}
+
 func main() {
+
+	repo := storage.Repository{DbPath: defaultStorage}
+
+	s := &Server{repo: repo}
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("/", homePage)
-	router.HandleFunc("/short-url", shortenUrl)
-	router.HandleFunc("/r/", redirectUrl)
+	router.HandleFunc("/", s.homePage)
+	router.HandleFunc("/short-url", s.shortenUrl)
+	router.HandleFunc("/r/", s.redirectUrl)
 
 	port := ":8080"
 	fmt.Println("Starting server on port", port)
@@ -30,7 +38,7 @@ func main() {
 	}
 }
 
-func homePage(w http.ResponseWriter, r *http.Request) {
+func (s *Server) homePage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -38,16 +46,14 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./templates/index.html")
 }
 
-func redirectUrl(w http.ResponseWriter, r *http.Request) {
+func (s *Server) redirectUrl(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	shortUrl := "http://" + r.Host + r.URL.Path
 
-	urlRepo := storage.Repository{DbPath: defaultStorage}
-
-	data, err := urlRepo.Load()
+	data, err := s.repo.Load()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -63,7 +69,7 @@ func redirectUrl(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, longUrl, http.StatusFound)
 }
 
-func shortenUrl(w http.ResponseWriter, r *http.Request) {
+func (s *Server) shortenUrl(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -89,9 +95,7 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 		ShortUrl: shortUrl,
 	}
 
-	urlRepo := storage.Repository{DbPath: defaultStorage}
-
-	data, err := urlRepo.Load()
+	data, err := s.repo.Load()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -99,7 +103,7 @@ func shortenUrl(w http.ResponseWriter, r *http.Request) {
 
 	data = append(data, urlPair)
 
-	urlRepo.Store(data)
+	s.repo.Store(data)
 
 	w.Write([]byte(shortUrl))
 }
