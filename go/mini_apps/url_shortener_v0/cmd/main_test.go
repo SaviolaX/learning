@@ -9,6 +9,28 @@ import (
 	"urlShortener/pkg/storage"
 )
 
+func TestShortenUrl_MethodNotAllowed(t *testing.T) {
+	repo := storage.Repository{DbPath: ""}
+
+	s := &Server{
+		repo:      repo,
+		indexPath: "../templates/index.html",
+	}
+
+	router := http.NewServeMux()
+	router.HandleFunc("/short-url", s.shortenUrl)
+
+	req := httptest.NewRequest(http.MethodGet, "/short-url", nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected status %d got %d", http.StatusMethodNotAllowed, rec.Code)
+	}
+
+}
+
 func TestHomePage_MethodNotAllowed(t *testing.T) {
 	repo := storage.Repository{DbPath: ""}
 

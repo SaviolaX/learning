@@ -66,7 +66,8 @@ func (s *Server) redirectUrl(w http.ResponseWriter, r *http.Request) {
 
 	data, err := s.repo.Load()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -89,13 +90,15 @@ func (s *Server) shortenUrl(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "cannot parse form", http.StatusBadRequest)
+		return
 	}
 
 	url := r.FormValue("url")
 
 	hashedUrl, err := hasher.Sha256(url, hashLen)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -108,7 +111,8 @@ func (s *Server) shortenUrl(w http.ResponseWriter, r *http.Request) {
 
 	data, err := s.repo.Load()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
