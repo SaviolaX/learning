@@ -8,7 +8,19 @@ import (
 	"testing"
 )
 
-func TestRepository_IsExist_False(t *testing.T) {
+func TestRepository_GetByCode_LoadError(t *testing.T) {
+	hashCode := "asdf"
+
+	repo := Repository{DbPath: ""}
+
+	_, got := repo.GetByCode(hashCode)
+	want := "url not found"
+	if got.Error() != want {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+}
+
+func TestRepository_GetByCode_NotFound(t *testing.T) {
 	hashCode := "asdf"
 
 	dir := t.TempDir()
@@ -16,31 +28,18 @@ func TestRepository_IsExist_False(t *testing.T) {
 
 	repo := Repository{DbPath: path}
 
-	loadedUrl, err := repo.Load()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	_, got := repo.GetByCode(hashCode)
+	want := "url not found"
 
-	got, isOk := repo.IsExist(hashCode, loadedUrl)
-	want := UrlPair{}
-
-	if !reflect.DeepEqual(got, want) {
+	if got.Error() != want {
 		t.Fatalf("got %v, want %v", got, want)
 	}
-
-	wantIsOk := false
-	if isOk != wantIsOk {
-		t.Fatalf("got %v, want %v", isOk, wantIsOk)
-	}
-
 }
 
-func TestRepository_IsExist_True(t *testing.T) {
+func TestRepository_GetByCode_Found(t *testing.T) {
 	hashCode := "asdf"
 	url := "google.com"
-	urls := []UrlPair{
-		{Code: hashCode, OriginalUrl: url},
-	}
+	urls := UrlPair{Code: hashCode, OriginalUrl: url}
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "db.json")
@@ -51,21 +50,14 @@ func TestRepository_IsExist_True(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	loadedUrl, err := repo.Load()
+	got, err := repo.GetByCode(hashCode)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	got, isOk := repo.IsExist(hashCode, loadedUrl)
 	want := UrlPair{Code: hashCode, OriginalUrl: url}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("got %v, want %v", got, want)
-	}
-
-	wantIsOk := true
-	if isOk != wantIsOk {
-		t.Fatalf("got %v, want %v", isOk, wantIsOk)
 	}
 
 }
@@ -127,16 +119,17 @@ func TestRepository_Load_InvalidJSON(t *testing.T) {
 
 func TestRepository_Store_WritesJSON(t *testing.T) {
 	urls := []UrlPair{
-		{"https://google.com", "abc"},
-		{"https://youtube.com", "def"},
+		{"asdf", "https://youtube.com"},
 	}
+
+	url := UrlPair{Code: "asdf", OriginalUrl: "https://youtube.com"}
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "db.json")
 
 	repo := Repository{DbPath: path}
 
-	err := repo.Store(urls)
+	err := repo.Store(url)
 	if err != nil {
 		t.Fatalf("store failed: %v", err)
 	}
@@ -159,7 +152,7 @@ func TestRepository_Store_WritesJSON(t *testing.T) {
 func TestRepository_Store_WriteError(t *testing.T) {
 	repo := Repository{DbPath: "/invalid/path/db.json"}
 
-	err := repo.Store([]UrlPair{{"a", "b"}})
+	err := repo.Store(UrlPair{Code: "a", OriginalUrl: "b"})
 
 	if err == nil {
 		t.Fatal("expected error but got nil")
@@ -170,21 +163,19 @@ func TestStorage_StoreLoad_RoundTrip(t *testing.T) {
 
 	lstUrls := []UrlPair{
 		{
-			OriginalUrl: "https://google.com",
-			Code:        "1234567890",
-		},
-		{
 			OriginalUrl: "https://youtube.com",
-			Code:        "0987654321",
+			Code:        "asdf",
 		},
 	}
+
+	url := UrlPair{Code: "asdf", OriginalUrl: "https://youtube.com"}
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "db.json")
 
 	storage := Repository{DbPath: path}
 
-	err := storage.Store(lstUrls)
+	err := storage.Store(url)
 
 	if err != nil {
 		t.Fatalf("failed to store: %v", err)
