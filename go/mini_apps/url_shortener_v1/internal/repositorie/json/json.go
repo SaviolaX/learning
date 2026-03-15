@@ -2,8 +2,10 @@ package json
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"sync"
 )
 
 type UrlPair struct {
@@ -13,23 +15,28 @@ type UrlPair struct {
 
 type Repository struct {
 	DbPath string
+	mu     sync.RWMutex
 }
 
-func (r *Repository) Store(urls []UrlPair) error {
+func (r *Repository) Store(pair UrlPair) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-	// convert storage into bytes
+	pairs, err := r.load()
+	if err != nil {
+		return err
+	}
+
+	pairs = append(pairs, pair)
+	return r.write(pairs)
+}
+
+func (r *Repository) write(urls []UrlPair) error {
 	data, err := json.MarshalIndent(urls, "", " ")
 	if err != nil {
 		return fmt.Errorf("marshal storage: %w", err)
 	}
-
-	// write bytes into a file
-	err = os.WriteFile(r.DbPath, data, 0644)
-	if err != nil {
-		return fmt.Errorf("write file: %w", err)
-	}
-
-	return nil
+	return os.WriteFile(r.DbPath, data, 0644)
 }
 
 func (r *Repository) Load() ([]UrlPair, error) {
@@ -39,6 +46,7 @@ func (r *Repository) Load() ([]UrlPair, error) {
 
 }
 
+func (r *Repository) load() ([]UrlPair, error) {
 
 	var result []UrlPair
 
