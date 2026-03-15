@@ -33,6 +33,12 @@ func (r *Repository) Store(urls []UrlPair) error {
 }
 
 func (r *Repository) Load() ([]UrlPair, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.load()
+
+}
+
 
 	var result []UrlPair
 
