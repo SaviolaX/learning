@@ -51,19 +51,20 @@ func (r *Repository) Load() ([]UrlPair, error) {
 	return result, nil
 }
 
-func (r *Repository) IsExist(hashCode string, pairs []UrlPair) (UrlPair, bool) {
+func (r *Repository) GetByCode(hashCode string) (UrlPair, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
-	m := make(map[string]string)
-
-	for _, p := range pairs {
-		m[p.Code] = p.OriginalUrl
+	loadedUrls, err := r.load()
+	if err != nil {
+		return UrlPair{}, err
 	}
 
-	originalUrl, ok := m[hashCode]
-	if ok {
-		return UrlPair{Code: hashCode, OriginalUrl: originalUrl}, true
-
+	for _, p := range loadedUrls {
+		if p.Code == hashCode {
+			return p, nil
+		}
 	}
 
-	return UrlPair{}, false
+	return UrlPair{}, errors.New("url not found")
 }
