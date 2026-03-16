@@ -8,6 +8,8 @@ import (
 	"sync"
 )
 
+var ErrNotFound = errors.New("url not found")
+
 type UrlPair struct {
 	Code        string
 	OriginalUrl string
@@ -80,5 +82,5 @@ func (r *Repository) GetByCode(hashCode string) (UrlPair, error) {
 		}
 	}
 
-	return UrlPair{}, errors.New("url not found")
+	return UrlPair{}, ErrNotFound
 }
