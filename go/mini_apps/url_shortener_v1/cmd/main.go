@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,23 +17,17 @@ const redirectUrl = "http://localhost:8080/r/"
 const indexPath = "templates/index.html"
 
 type Server struct {
-	urls      []jsonRepo.UrlPair
-	db        jsonRepo.Repository
+	db        *jsonRepo.Repository
 	indexPath string
 }
 
 func main() {
 
-	db := jsonRepo.Repository{
+	db := &jsonRepo.Repository{
 		DbPath: dbPath,
 	}
 
-	loadedUrls, err := db.Load()
-	if err != nil {
-		log.Println(err)
-	}
-
-	s := &Server{urls: loadedUrls, db: db, indexPath: indexPath}
+	s := &Server{db: db, indexPath: indexPath}
 
 	router := http.NewServeMux()
 
@@ -44,7 +39,7 @@ func main() {
 
 	fmt.Println("Starting server on port", port)
 
-	err = http.ListenAndServe(port, router)
+	err := http.ListenAndServe(port, router)
 	if err != nil {
 		log.Fatalf("server stopped: %v", err)
 	}
@@ -88,17 +83,22 @@ func (s *Server) ShortenUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	checkedUrl, ok := s.db.IsExist(hashCode, s.urls)
-	// if not exist -> add, store, return
-	if !ok {
+	checkedUrl, err := s.db.GetByCode(hashCode)
+	if err != nil && !errors.Is(err, jsonRepo.ErrNotFound) {
+		log.Println(err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	if errors.Is(err, jsonRepo.ErrNotFound) {
+
+		log.Println("saving a new url pair")
 		pair := jsonRepo.UrlPair{
 			Code:        hashCode,
-			OriginalUrl: origUrl,
+			OriginalUrl: validatedUrl.Value,
 		}
 
-		s.urls = append(s.urls, pair)
-
-		if err := s.db.Store(s.urls); err != nil {
+		if err := s.db.Store(pair); err != nil {
 			log.Println(err)
 			http.Error(w, "storing error", http.StatusInternalServerError)
 			return
@@ -119,10 +119,8 @@ func (s *Server) RedirectUrl(w http.ResponseWriter, r *http.Request) {
 
 	hashCode := strings.TrimPrefix(r.URL.Path, "/r/")
 
-	urlPair, ok := s.db.IsExist(hashCode, s.urls)
-	fmt.Println(urlPair)
-
-	if !ok {
+	urlPair, err := s.db.GetByCode(hashCode)
+	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
