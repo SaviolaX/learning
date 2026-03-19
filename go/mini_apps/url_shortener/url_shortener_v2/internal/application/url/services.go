@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	dom "urlShortenerV2/internal/domain/url"
+	"urlShortenerV2/internal/infrastructure/databases/json"
 )
 
 type Service struct {
@@ -32,7 +33,7 @@ func (s *Service) Shorten(ctx context.Context, origUrl string) (string, error) {
 		if checkedUrl.OriginUrl.Value == validatedUrl.Value {
 			return hashCode, nil
 		}
-		return "", fmt.Errorf("hashCode collision fot %s", origUrl)
+		return "", fmt.Errorf("hashCode collision for %s", origUrl)
 	}
 
 	pair := dom.UrlPair{Code: hashCode, OriginUrl: validatedUrl}
@@ -46,7 +47,7 @@ func (s *Service) GetUrl(ctx context.Context, code string) (string, error) {
 
 	urlPair, err := s.repo.GetByCode(ctx, code)
 	if err != nil {
-		return "", fmt.Errorf("url not found: %w", err)
+		return "", json.ErrNotFound
 	}
 
 	return urlPair.OriginUrl.Value, nil
