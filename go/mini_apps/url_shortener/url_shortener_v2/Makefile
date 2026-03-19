@@ -1,11 +1,13 @@
 test:
-	go test ./internal/hasher/
-	go test ./internal/repositorie/json/
-	go test ./internal/url/
-	go test ./internal/server/
+	go test ./internal/infrastructure/databases/json/
+	go test ./internal/domain/url/
+	go test ./internal/infrastructure/hasher/
+	go test ./internal/application/url/
+	go test ./internal/transport/http/
 
 test-v:
-	go test -v ./internal/hasher/
-	go test -v ./internal/repositorie/json/
-	go test -v ./internal/url/
-	go test -v ./internal/server/
+	go test -v ./internal/infrastructure/databases/json/
+	go test -v ./internal/domain/url/
+	go test -v ./internal/infrastructure/hasher/
+	go test -v ./internal/application/url/
+	go test -v ./internal/transport/http/
